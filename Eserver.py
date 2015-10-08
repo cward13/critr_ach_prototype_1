@@ -29,27 +29,28 @@
 # Based on: https://github.com/thedancomplex/pydynamixel
 # */
 
-#import sys
+import sys
 #sys.path.append('/home/student/projects_wrk/pydynamixel-master/dynamixel')
 import os
-import dynamixel
-import serial_stream
+#import dynamixel
+#import serial_stream
 import time
 import random
 import sys
 import subprocess
 import optparse
-import yaml
-import dynamixel_network
+#import yaml
+#import dynamixel_network
 import numpy as np
 import socket
 import serial
 import time
+import ach
+import critr_ach
 
-
-comm_channel = ach.Channel(ha.CRITR_CHAN_REF_NAME)
+comm_channel = ach.Channel(critr_ach.CRITR_CHAN_REF_NAME)
 comm_channel.flush()
-reference_struct = critr_ach.HUBO_REF()
+reference_struct = critr_ach.CRITR_REF()
 
 #############################################################################################
 ##	Radian to Dynamixel conversion functions
@@ -62,11 +63,11 @@ def dyn2rad(en):
 ##############################################################################################
 
 
-def main(settings):
-    portName = 'COM23'
-    baudRate = 1000000 #settings['baudRate']			
-    highestServoId = settings['highestServoId']
-    seriall = serial.Serial(port=portName, baudrate=baudRate, timeout=1)
+def main():
+    #portName = 'COM23'
+    #baudRate = 1000000 #settings['baudRate']			
+    #highestServoId = settings['highestServoId']
+    #seriall = serial.Serial(port=portName, baudrate=baudRate, timeout=1)
     # Ping the range of servos that are attached
     time.sleep(1)
     while True:
@@ -76,13 +77,13 @@ def main(settings):
 	string_send = ''
 	[status, framesize] = comm_channel.get(reference_struct, wait=True, last=True)
 	for data in reference_struct.ref:
-		string_send += data + ' '
+		string_send += str(data) + ' '
 	print string_send
-        seriall.write(string_send)
+        #seriall.write(string_send)
         time.sleep(.01)
-        msg = seriall.read(seriall.inWaiting())
+        #msg = seriall.read(seriall.inWaiting())
     c.close()
-
+main()
 def validateInput(userInput, rangeMin, rangeMax):
     '''
     Returns valid user input or None
@@ -97,7 +98,7 @@ def validateInput(userInput, rangeMin, rangeMax):
         return None
     
     return inTest
-
+'''
 if __name__ == '__main__':
     
     parser = optparse.OptionParser()
@@ -166,4 +167,4 @@ if __name__ == '__main__':
 
     
     main(settings)
-
+'''

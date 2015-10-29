@@ -6,7 +6,7 @@ from ctypes import Structure,c_uint16,c_double,c_ubyte,c_uint32,c_int16
 
 CRITR_SERVER_IP = '104.131.172.175'
 CRITR_SERVER_PORT = '1234'
-CRITR_JOINT_COUNT = 9
+CRITR_JOINT_COUNT = 18
 CRITR_CHAN_REF_NAME = 'critr-ref'
 CRITR_LOOP_PERIOD  = 0.005
 

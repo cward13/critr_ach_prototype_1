@@ -1,5 +1,5 @@
 import sys
-sys.path.append('/home/student/ECE-499-590-Fall-2014/dynamixel-1.0.1/dynamixel')
+#sys.path.append('/home/student/ECE-499-590-Fall-2014/dynamixel-1.0.1/dynamixel')
 import os
 #import dynamixel
 #import serial_stream
@@ -8,7 +8,7 @@ import random
 import sys
 import subprocess
 import optparse
-import yaml
+#import yaml
 #import dynamixel_network
 import numpy as np
 #from ovrsdk import *
@@ -69,6 +69,7 @@ def main(settings):
 				#print new
 				if(sum(new[0:highestServoId]) == new[highestServoId]):
 					y=0	
+		print "Here"
 		#s.sendto(msg, server)                            #sends the string made above
 		#load data into struct
 		data = msg.split()

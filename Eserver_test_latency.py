@@ -48,7 +48,7 @@ import serial
 import time
 import ach
 import critr_ach
-
+import csv
 comm_channel = ach.Channel(critr_ach.CRITR_CHAN_REF_NAME)
 comm_channel.flush()
 reference_struct = critr_ach.CRITR_REF()
@@ -65,31 +65,47 @@ def dyn2rad(en):
 
 
 Base_36_Table=['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+data=[]
+
 
 
 def main():
-    portName = '/dev/ttyACM0'
-    baudRate = 1000000 #settings['baudRate']			
+    #portName = '/dev/ttyACM1'
+    #baudRate = 1000000 #settings['baudRate']			
     #highestServoId = settings['highestServoId']
-    seriall = serial.Serial(port=portName, baudrate=baudRate, timeout=1)
+    #seriall = serial.Serial(port=portName, baudrate=baudRate, timeout=1)
     # Ping the range of servos that are attached
     time.sleep(1)
+    start_time=0
+    receive_time=0
+    counter = 0
     while True:
-        counter=0					#counts through the list below
+	start_time = time.time()
         #data, addr = s.recvfrom(1024)			#gets positions from the client
         #data = data.split()				# splits the string at spaces
 	string_send = ''
 	num = 0 
 	datastring = ''
 	[status, framesize] = comm_channel.get(reference_struct, wait=True, last=True)
-	for data in reference_struct.ref:
-		string_send = string_send + str(data) + ' '
-		first_byte = math.floor(float(data)/36)
-                second_byte = data%36
-                datastring = datastring + Base_36_Table[int(first_byte)] + Base_36_Table[int(second_byte)] 
-	print string_send
-	seriall.write(datastring)    
-	time.sleep(.01)
+	#time.sleep(.01)
+	latency = time.time() - start_time - 1/60
+	#print time.time()
+	data.append([latency])
+	if counter == 1000:
+		with open('latency.csv', 'w') as fp:
+    			a = csv.writer(fp, delimiter=',')
+    			a.writerows(data)
+			#a.close()
+		print "FILE PRINTED"
+	counter = counter + 1
+	#for data in reference_struct.ref:
+	#	string_send = string_send + str(data) + ' '
+	#	first_byte = math.floor(float(data)/36)
+        #        second_byte = data%36
+        #        datastring = datastring + Base_36_Table[int(first_byte)] + Base_36_Table[int(second_byte)] 
+	#print string_send
+	#seriall.write(datastring)    	
+	#time.sleep(.0001)
         #msg = seriall.read(seriall.inWaiting())
 	#print msg
     c.close()

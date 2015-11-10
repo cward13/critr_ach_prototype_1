@@ -29,27 +29,25 @@
 # Based on: https://github.com/thedancomplex/pydynamixel
 # */
 
-import sys
+#import sys
 #sys.path.append('/home/student/projects_wrk/pydynamixel-master/dynamixel')
 import os
-#import dynamixel
-#import serial_stream
-import math
+import dynamixel
+import serial_stream
 import time
 import random
 import sys
 import subprocess
 import optparse
-#import yaml
-#import dynamixel_network
+import yaml
+import dynamixel_network
 import numpy as np
 import socket
 import serial
 import time
-import ach
-import critr_ach
 
-comm_channel = ach.Channel(critr_ach.CRITR_CHAN_REF_NAME)
+
+comm_channel = ach.Channel(ha.CRITR_CHAN_REF_NAME)
 comm_channel.flush()
 reference_struct = critr_ach.CRITR_REF()
 
@@ -64,13 +62,10 @@ def dyn2rad(en):
 ##############################################################################################
 
 
-Base_36_Table=['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
-
-
-def main():
-    portName = '/dev/ttyACM0'
+def main(settings):
+    portName = 'COM23'
     baudRate = 1000000 #settings['baudRate']			
-    #highestServoId = settings['highestServoId']
+    highestServoId = settings['highestServoId']
     seriall = serial.Serial(port=portName, baudrate=baudRate, timeout=1)
     # Ping the range of servos that are attached
     time.sleep(1)
@@ -79,21 +74,15 @@ def main():
         #data, addr = s.recvfrom(1024)			#gets positions from the client
         #data = data.split()				# splits the string at spaces
 	string_send = ''
-	num = 0 
-	datastring = ''
 	[status, framesize] = comm_channel.get(reference_struct, wait=True, last=True)
 	for data in reference_struct.ref:
-		string_send = string_send + str(data) + ' '
-		first_byte = math.floor(float(data)/36)
-                second_byte = data%36
-                datastring = datastring + Base_36_Table[int(first_byte)] + Base_36_Table[int(second_byte)] 
+		string_send += data + ' '
 	print string_send
-	seriall.write(datastring)    
-	time.sleep(.01)
-        #msg = seriall.read(seriall.inWaiting())
-	#print msg
+        seriall.write(string_send)
+        time.sleep(.01)
+        msg = seriall.read(seriall.inWaiting())
     c.close()
-main()
+
 def validateInput(userInput, rangeMin, rangeMax):
     '''
     Returns valid user input or None
@@ -108,7 +97,7 @@ def validateInput(userInput, rangeMin, rangeMax):
         return None
     
     return inTest
-'''
+
 if __name__ == '__main__':
     
     parser = optparse.OptionParser()
@@ -177,4 +166,4 @@ if __name__ == '__main__':
 
     
     main(settings)
-'''
+

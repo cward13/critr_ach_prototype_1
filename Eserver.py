@@ -87,11 +87,11 @@ def main():
 		first_byte = math.floor(float(data)/36)
                 second_byte = data%36
                 datastring = datastring + Base_36_Table[int(first_byte)] + Base_36_Table[int(second_byte)] 
-	print string_send
+	#print string_send
 	seriall.write(datastring)    
-	time.sleep(.01)
         #msg = seriall.read(seriall.inWaiting())
-	#print msg
+	#print msg	
+	time.sleep(.05)
     c.close()
 main()
 def validateInput(userInput, rangeMin, rangeMax):

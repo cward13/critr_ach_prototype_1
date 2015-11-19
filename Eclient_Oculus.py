@@ -11,7 +11,7 @@ import optparse
 #import yaml
 #import dynamixel_network
 import numpy as np
-#from ovrsdk import *
+from ovrsdk import *
 import socket
 import thread
 import math
@@ -29,18 +29,23 @@ reference_struct = critr_ach.CRITR_REF()
 
 
 
-#############################################################################################
-##    Radian to Dynamixel conversion functions
-def rad2dyn(rad):
-    return np.int(np.floor( (rad + np.pi)/(2.0 * np.pi) * 1023 ))
-
-def dyn2rad(en):
-    return ((en*2.0*np.pi)/1024) - np.pi
-
 ##############################################################################################
 #global
 #open a link to the server
 x=1
+
+
+def encoder_units(rad):
+	deg=rad*(180/math.pi)
+	if(-180<= deg and deg<=-60):
+		deg=-60
+	return int(((deg+(180))/360)*1023)
+
+
+def rad2dyn(rad):
+    return int(math.floor( (rad + math.pi)/(2.0 * math.pi) * 1023 ))
+
+
 
 def main(settings):
 	portName = settings['port']        #searches for a usb2dyn
@@ -52,6 +57,14 @@ def main(settings):
 	my_bytes = bytearray()
 	my_bytes.append(highestServoId)
 	ard.write(my_bytes)
+    
+		
+	ovr_Initialize()            #this part is form the oculus rift(OR) sdk this gets the pan and tilt
+	hmd = ovrHmd_Create(0)
+    	hmdDesc = ovrHmdDesc()
+    	ovrHmd_GetDesc(hmd, byref(hmdDesc))
+    	ovrHmd_StartSensor(hmd,ovrSensorCap_Orientation | ovrSensorCap_YawCorrection,0)#end this part of OR code
+
 	time.sleep(.5)
 	while True:
 		y = 1
@@ -69,13 +82,21 @@ def main(settings):
 				#print new
 				if(sum(new[0:highestServoId]) == new[highestServoId]):
 					y=0	
-		print "Here"
+		#print "Here"
 		#s.sendto(msg, server)                            #sends the string made above
 		#load data into struct
 		data = msg.split()
 		for num in range(0,18):
 		#	print int(data[num])
 			reference_struct.ref[num]=int(data[num])
+		
+		#Values from Oculus Rift -- this Code is from ARCHR
+		print 'here'
+        	ss = ovrHmd_GetSensorState(hmd, ovr_GetTimeInSeconds())#more OR code
+		pose = ss.Predicted.Pose
+		reference_struct.ref[19] = rad2dyn(pose.Orientation.x*math.pi);                #gets tilt
+        	reference_struct.ref[18] = rad2dyn(pose.Orientation.y*math.pi);                #gets pan
+		print reference_struct.ref[18]
 		comm_channel.put(reference_struct)
 		#print reference_struct.ref
     	return None

@@ -69,7 +69,8 @@ Base_36_Table=['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','
 
 def main():
     portName = '/dev/ttyACM0'
-    baudRate = 1000000 #settings['baudRate']			
+    baudRate = 1000000 #settings['baudRate']
+    Txport = serial.Serial('/dev/ttyAMA0',baudrate=baudRate,timeout = 1)	
     #highestServoId = settings['highestServoId']
     seriall = serial.Serial(port=portName, baudrate=baudRate, timeout=1)
     # Ping the range of servos that are attached
@@ -81,6 +82,7 @@ def main():
 	string_send = ''
 	num = 0 
 	datastring = ''
+	dc_datastring = ''
 	[status, framesize] = comm_channel.get(reference_struct, wait=True, last=True)
 	for data in reference_struct.ref:
 		string_send = string_send + str(data) + ' '
@@ -88,7 +90,12 @@ def main():
                 second_byte = data%36
                 datastring = datastring + Base_36_Table[int(first_byte)] + Base_36_Table[int(second_byte)] 
 	#print string_send
-	seriall.write(datastring)    
+	seriall.write(datastring)
+	for data in reference_struct.dcref:
+		first_byte = math.floor(float(data)/36)
+                second_byte = data%36
+                dc_datastring = dc_datastring + Base_36_Table[int(first_byte)] + Base_36_Table[int(second_byte)] 
+	Txport.write(dc_datastring)    
         #msg = seriall.read(seriall.inWaiting())
 	#print msg	
 	time.sleep(.05)

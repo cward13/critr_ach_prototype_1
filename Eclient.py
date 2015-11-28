@@ -21,7 +21,8 @@ import time
 import ach
 import critr_ach
 
-
+import curses
+import getopt
 
 comm_channel = ach.Channel(critr_ach.CRITR_CHAN_REF_NAME)
 comm_channel.flush()
@@ -46,6 +47,7 @@ def main(settings):
 	portName = settings['port']        #searches for a usb2dyn
 	#portName = 'COM22'        #searches for a usb2dyn
 	baudRate = 1000000             #this is set to max can be changed to =>settings['baudRate']<= to be asked for a speed
+	user_input = 0
 	highestServoId = settings['highestServoId']#asked for highest servo id
 	ard = serial.Serial(port=portName, baudrate=baudRate, timeout=1)
 	time.sleep(1)
@@ -53,30 +55,50 @@ def main(settings):
 	my_bytes.append(highestServoId)
 	ard.write(my_bytes)
 	time.sleep(.5)
-	while True:
-		y = 1
-		ard.flush()
-		while(y==1):
-			ard.write(my_bytes)
-			#time.sleep(.1)
-			time.sleep(.02+highestServoId * 0.005) # I shortened this to match the new value in your Arduino code
-			# Serial read section
-			msg = ard.read(ard.inWaiting()) # read all characters in buffer			
-			#print msg			
-			new = np.fromstring(msg, dtype=int, sep=' ')
-			print msg
-			if (new.size == highestServoId+1):
-				#print new
-				if(sum(new[0:highestServoId]) == new[highestServoId]):
-					y=0	
-		print "Here"
+	print 'start'
+	try:
+		screen = curses.initscr()
+	        curses.noecho()
+	        curses.cbreak()
+	        screen.keypad(True)
+		screen.timeout(10)
+		user_input = 0
+		while True:
+			y = 1
+			ard.flush()
+			while(y==1):
+				char = screen.getch()
+				if char == ord('q'):
+					break
+				elif char == curses.KEY_RIGHT:
+					user_input = 4
+				elif char == curses.KEY_LEFT:
+					user_input = 3
+				elif char == curses.KEY_UP:
+					user_input = 1
+				elif char == curses.KEY_DOWN:
+					user_input = 2
+				elif char == ord('s') or char == ord(' '):
+					user_input = 0
+				ard.write(my_bytes)
+				time.sleep(.02+highestServoId * 0.005)
+				msg = ard.read(ard.inWaiting())
+				#print msg			
+				new = np.fromstring(msg, dtype=int, sep=' ')
+				#print msg
+				if (new.size == highestServoId+1):
+					#print new
+					if(sum(new[0:highestServoId]) == new[highestServoId]):
+						y=0	
+		#print "Here"
 		#s.sendto(msg, server)                            #sends the string made above
 		#load data into struct
-		data = msg.split()
-		for num in range(0,18):
+			data = msg.split()
+			for num in range(0,18):
 		#	print int(data[num])
-			reference_struct.ref[num]=int(data[num])
-		comm_channel.put(reference_struct)
+				reference_struct.ref[num]=int(data[num])
+			reference_struct.dcref[0]=user_input
+			comm_channel.put(reference_struct)
 		#print reference_struct.ref
     	return None
 

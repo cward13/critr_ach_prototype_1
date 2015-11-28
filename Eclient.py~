@@ -62,7 +62,6 @@ def main(settings):
 	screen.keypad(True)
 	screen.timeout(10)
 	user_input = 0
-	print "Here"
 	while True:
 		y = 1
 		ard.flush()

@@ -91,10 +91,10 @@ def main():
                 datastring = datastring + Base_36_Table[int(first_byte)] + Base_36_Table[int(second_byte)] 
 	#print string_send
 	seriall.write(datastring)
-	#for data in reference_struct.dcref:
-	first_byte = math.floor(float(reference_struct.dcref[0])/36)
-	second_byte = reference_struct.dcref[0]%36
-	dc_datastring = Base_36_Table[int(first_byte)] + Base_36_Table[int(second_byte)] 
+	for data in reference_struct.dcref:
+		first_byte = math.floor(float(data)/36)
+                second_byte = data%36
+                dc_datastring = dc_datastring + Base_36_Table[int(first_byte)] + Base_36_Table[int(second_byte)] 
 	Txport.write(dc_datastring)    
         #msg = seriall.read(seriall.inWaiting())
 	#print msg	

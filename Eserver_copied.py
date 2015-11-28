@@ -29,12 +29,11 @@
 # Based on: https://github.com/thedancomplex/pydynamixel
 # */
 
-import sys
+#import sys
 #sys.path.append('/home/student/projects_wrk/pydynamixel-master/dynamixel')
 import os
 #import dynamixel
 #import serial_stream
-import math
 import time
 import random
 import sys
@@ -46,13 +45,6 @@ import numpy as np
 import socket
 import serial
 import time
-import ach
-import critr_ach
-
-comm_channel = ach.Channel(critr_ach.CRITR_CHAN_REF_NAME)
-comm_channel.flush()
-reference_struct = critr_ach.CRITR_REF()
-
 #############################################################################################
 ##	Radian to Dynamixel conversion functions
 def rad2dyn(rad):
@@ -62,38 +54,74 @@ def dyn2rad(en):
     return ((en*2.0*np.pi)/1024) - np.pi
 
 ##############################################################################################
-
-
 Base_36_Table=['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
 
 
-def main():
-    portName = /dev/ttyACM0
+def main(settings):
+    #start server
+    host = '192.168.1.213' #'10.159.168.77'		#gets comp ip address
+    port = 20000						#random port
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)	#tells udp
+    s.bind((str(host), port))					#binds it
+    print str(s.bind)
+    print "Server Started."
+    #highestServoId, addr = s.recvfrom(1024)			#receves number of servos per robot
+    
+    # Establish a serial connection to the dynamixel network.
+    # This usually requires a USB2Dynamixel
+    #portName = settings['port']				#pick the usb to dyn port
+    portName = '/dev/ttyACM1' #'COM23'
     baudRate = 1000000 #settings['baudRate']			
-    #highestServoId = settings['highestServoId']
+    highestServoId = settings['highestServoId']
     seriall = serial.Serial(port=portName, baudrate=baudRate, timeout=1)
+    #net = dynamixel_network.DynamixelNetwork(seriall)
+    
     # Ping the range of servos that are attached
     time.sleep(1)
     while True:
         counter=0					#counts through the list below
-        #data, addr = s.recvfrom(1024)			#gets positions from the client
-        #data = data.split()				# splits the string at spaces
-	string_send = ''
-	num = 0 
-	datastring = ''
-	[status, framesize] = comm_channel.get(reference_struct, wait=True, last=True)
-	for data in reference_struct.ref:
-		string_send = string_send + str(data) + ' '
-		first_byte = math.floor(float(data)/36)
-                second_byte = data%36
-                datastring = datastring + Base_36_Table[int(first_byte)] + Base_36_Table[int(second_byte)] 
-	#print string_send
-	seriall.write(datastring)    
-        #msg = seriall.read(seriall.inWaiting())
-	#print msg	
-	time.sleep(.05)
+        data, addr = s.recvfrom(1024)			#gets positions from the client
+        data = data.split()				# splits the string at spaces
+        datastring =''
+#    	for i in highestServoId:
+#    		datastring = datastring +    Base_36_Table[data[i]/36] + Base_36_Table[data[i]%36] 
+ #       	print string_send
+#		seriall.write(datastring)    
+#		time.sleep(.01)    
+
+	for i in range(0, highestServoId):	
+		data[i] = str(i) + ' '	 + data[i]
+	print data[1]
+        	#print data[i]
+		seriall.write(data[i])
+        	#time.sleep(.1)
+		msg = seriall.read(seriall.inWaiting())
+		print msg
+	
+	newdata = np.fromstring(data, dtype = int, sep = ' ')
+	for i in range(0, highestServoId):
+	#	num = str(i)
+	#	seriall.write(num)
+	#	time.sleep(.1)
+	#	seriall.write(data[i])
+	#	time.sleep(.1)
+	#
+		msg = seriall.read(seriall.inWaiting())
+		print msg
+	
+	#print newdata
+	#pos = ''					#preps a str to start sending info back
+	#pos = str(pos)					#i dont think this needs to be here
+	#counter=0					#counter to count through the initial loads
+	#for actuator in myActuators:			#str to send back data
+   		#pos = pos + str(actuator._get_current_position()) + ' ' #gets current position
+		#pos = pos + str(abs(actuator._get_current_load())) + ' '	# gets current load -initial load
+		#counter+=1
+	#pos.join(' ')					#adds another space at the end
+	#s.sendto(pos, addr)				#sends the str to the client
+        #net.synchronize()				#sets all the positions of the servos connected to the server
     c.close()
-main()
+
 def validateInput(userInput, rangeMin, rangeMax):
     '''
     Returns valid user input or None
@@ -108,7 +136,7 @@ def validateInput(userInput, rangeMin, rangeMax):
         return None
     
     return inTest
-'''
+
 if __name__ == '__main__':
     
     parser = optparse.OptionParser()
@@ -131,7 +159,7 @@ if __name__ == '__main__':
             portPrompt = "Which port corresponds to your USB2Dynamixel? \n"
             # Get a list of ports that mention USB
             try:
-                possiblePorts = subprocess.check_output('ls /dev/ | grep -i usb',
+                possiblePorts = subprocess.check_output('ls /dev/ | grep -i ACM',
                                                         shell=True).split()
                 possiblePorts = ['/dev/' + port for port in possiblePorts]
             except subprocess.CalledProcessError:
@@ -174,7 +202,13 @@ if __name__ == '__main__':
             highestServoId = validateInput(hsiTest, 1, 255)
         
         settings['highestServoId'] = highestServoId
-
+        
+        # Save the output settings to a yaml file
+        #with open(settingsFile, 'w') as fh:
+        #    yaml.dump(settings, fh)
+        #    print("Your settings have been saved to 'settings.yaml'. \nTo " +
+        #           "change them in the future either edit that file or run " +
+        #           "this example with -c.")
     
     main(settings)
-'''
+

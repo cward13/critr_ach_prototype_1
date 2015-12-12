@@ -29,6 +29,9 @@ comm_channel.flush()
 reference_struct = critr_ach.CRITR_REF()
 
 
+LUT=['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+
+
 
 #############################################################################################
 ##    Radian to Dynamixel conversion functions
@@ -46,7 +49,7 @@ x=1
 def main(settings):
 	portName = settings['port']        #searches for a usb2dyn
 	#portName = 'COM22'        #searches for a usb2dyn
-	baudRate = 1000000             #this is set to max can be changed to =>settings['baudRate']<= to be asked for a speed
+	baudRate = 250000             #this is set to max can be changed to =>settings['baudRate']<= to be asked for a speed
 	user_input = 0
 	highestServoId = settings['highestServoId']#asked for highest servo id
 	ard = serial.Serial(port=portName, baudrate=baudRate, timeout=1)
@@ -71,6 +74,7 @@ def main(settings):
 	curses.cbreak()
 	screen.keypad(True)
 	screen.timeout(10)
+	
 	user_input = 0
 	print "Here"
 	while True:
@@ -90,30 +94,32 @@ def main(settings):
 				user_input = 2
 			elif char == ord('s') or char == ord(' '):
 				user_input = 0
-			ard.write(my_bytes)
-			time.sleep(.02+highestServoId * 0.005)
-			msg = ard.read(ard.inWaiting())
-			#print msg			
-			new = np.fromstring(msg, dtype=int, sep=' ')
-			#print msg
-			if (new.size == highestServoId+1):
-				#print new
-				if(sum(new[0:highestServoId]) == new[highestServoId]):
-					y=0	
-		print "Here"
-		#s.sendto(msg, server)                            #sends the string made above
-		#load data into struct
-		data = msg.split()
+			
+			time.sleep(.1) 
+			msg = ard.read(ard.inWaiting()) # read all characters in buffer
+			#print msg	
+			if(len(msg) == 40):
+				y=0
+		data_inc = 0
+		tempval = 0
+		data=[]
+		#print 'here'
+		for char_val in msg:
+			if data_inc == 0:
+				tempval=LUT.index(char_val)
+			else:
+				data.append(tempval*36+LUT.index(char_val))
+			data_inc= (data_inc + 1)%2
+		#print data			
 		for num in range(0,18):
-			reference_struct.ref[num]=int(data[num])
+			reference_struct.ref[num]=int(data[num+2])
 		ss = ovrHmd_GetSensorState(hmd, ovr_GetTimeInSeconds())#more OR code
-                pose = ss.Predicted.Pose
+                print reference_struct.ref[17]
+		pose = ss.Predicted.Pose
                 reference_struct.ref[19] = rad2dyn(pose.Orientation.x*math.pi);                #gets tilt
                 reference_struct.ref[18] = rad2dyn(pose.Orientation.y*math.pi);                #gets pan
-		print msg
 		reference_struct.dcref[0]=user_input
 		comm_channel.put(reference_struct)
-		#print reference_struct.dcref[0]
 	return 1#None
 
 def validateInput(userInput, rangeMin, rangeMax):
@@ -148,7 +154,7 @@ if __name__ == '__main__':
             portPrompt = "Which port corresponds to your USB2Dynamixel? \n"
             # Get a list of ports that mention USB
             try:
-                possiblePorts = subprocess.check_output('ls /dev/ | grep -i ACM',
+                possiblePorts = subprocess.check_output('ls /dev/ | grep -i USB',
                                                         shell=True).split()
                 possiblePorts = ['/dev/' + port for port in possiblePorts]
             except subprocess.CalledProcessError:

@@ -6,6 +6,8 @@ export LD_LIBRARY_PATH=/usr/lib:
 
 SERVER_IP='104.131.172.175'
 
+#SERVER_IP='127.0.0.1'
+
 CRITR_REF='critr-ref'
 
 MakeAch()
@@ -17,7 +19,7 @@ MakeAch()
 Client_Remote()
 {
 	achd -d -r push $SERVER_IP $CRITR_REF
-	sudo python Eclient.py
+	sudo python Eclient_Pot.py
 }
 Server_Remote()
 {

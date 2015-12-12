@@ -90,30 +90,28 @@ def main(settings):
 				user_input = 2
 			elif char == ord('s') or char == ord(' '):
 				user_input = 0
-			ard.write(my_bytes)
-			time.sleep(.02+highestServoId * 0.005)
-			msg = ard.read(ard.inWaiting())
-			#print msg			
-			new = np.fromstring(msg, dtype=int, sep=' ')
-			#print msg
-			if (new.size == highestServoId+1):
-				#print new
-				if(sum(new[0:highestServoId]) == new[highestServoId]):
-					y=0	
-		print "Here"
-		#s.sendto(msg, server)                            #sends the string made above
-		#load data into struct
-		data = msg.split()
-		for num in range(0,18):
-			reference_struct.ref[num]=int(data[num])
+			time.sleep(.1) 
+			msg = ard.read(ard.inWaiting()) # read all characters in buffer	
+			if(len(msg) == 40):
+				y=0
+		data_inc = 0
+		tempval = 0
+		data=[]
+		for char_val in msg:
+			if data_inc == 0:
+				tempval=LUT.index(char_val)
+			else:
+				data.append(tempval*36+LUT.index(char_val))
+			data_inc= (data_inc + 1)%2
+		print data			
+		for num in range(2,20):
+			reference_struct.ref[num-2]=int(data[num-2])
 		ss = ovrHmd_GetSensorState(hmd, ovr_GetTimeInSeconds())#more OR code
                 pose = ss.Predicted.Pose
                 reference_struct.ref[19] = rad2dyn(pose.Orientation.x*math.pi);                #gets tilt
                 reference_struct.ref[18] = rad2dyn(pose.Orientation.y*math.pi);                #gets pan
-		print msg
 		reference_struct.dcref[0]=user_input
 		comm_channel.put(reference_struct)
-		#print reference_struct.dcref[0]
 	return 1#None
 
 def validateInput(userInput, rangeMin, rangeMax):

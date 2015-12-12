@@ -70,7 +70,7 @@ Base_36_Table=['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','
 def main():
     portName = '/dev/ttyACM0'
     baudRate = 1000000 #settings['baudRate']
-    Txport = serial.Serial('/dev/ttyAMA0',baudrate=baudRate,timeout = 1)	
+    Txport = serial.Serial('/dev/ttySAC0',baudrate=baudRate,timeout = 1)	
     #highestServoId = settings['highestServoId']
     seriall = serial.Serial(port=portName, baudrate=baudRate, timeout=1)
     # Ping the range of servos that are attached
